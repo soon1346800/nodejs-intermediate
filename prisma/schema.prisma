@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users Table
+model Users {
+  id          Int       @id @default(autoincrement()) @map("id")
+  email       String    @unique @map("email")
+  password    String    @map("password")
+  name        String    @map("name")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
+
+  // Users:Products = 1:N 
+  Products    Products[]
+
+// MySQL 이름도 동일
+  @@map("Users")
+}
+
+//Products Table
+model Products {
+  id          Int       @id @default(autoincrement()) @map("id")
+  userId      Int       @map("userId")
+  title       String    @map("title")
+  description String    @map("description") @db.Text
+  status      String    @default("FOR_SALE) @map("status")
+  createdAt   DateTime  @default(now()) @map("createdAt")
+  updatedAt   DateTime  @updatedAt @map("updatedAt")
+
+  // User Table 관계. id와 userId
+  User Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("Products")
+}

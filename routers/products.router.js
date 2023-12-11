@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { Sequelize } from 'sequelize';
+import { prisma } from '../utils/prisma/index.js';
 import { needSignin } from '../middlewares/need-signin.middleware.js';
-import db from '../models/index.cjs';
 
 const productsRouter = Router();
-const { Products, Users } = db;
 
 // 생성
 productsRouter.post('', needSignin, async (req, res) => {
@@ -27,7 +25,7 @@ productsRouter.post('', needSignin, async (req, res) => {
     }
 
     const product = (
-      await Products.create({ title, description, userId })
+      await await prisma.create({ title, description, userId })
     ).toJSON();
 
     return res.status(201).json({
@@ -54,7 +52,7 @@ productsRouter.get('', async (req, res) => {
       upperCaseSort = 'DESC';
     }
 
-    const products = await Products.findAll({
+    const products = await prisma.products.findAll({
       attributes: [
         'id',
         'title',
@@ -88,14 +86,14 @@ productsRouter.get('/:productId', async (req, res) => {
   try {
     const { productId } = req.params;
 
-    const product = await Products.findByPk(productId, {
+    const product = await prisma.products.findFirst(productId, {
       attributes: [
         'id',
         'title',
         'description',
         'status',
         'userId',
-        [Sequelize.col('user.name'), 'userName'],
+        'name',
         'createdAt',
         'updatedAt',
       ],
@@ -150,7 +148,9 @@ productsRouter.put('/:productId', needSignin, async (req, res) => {
     }
 
     // 일치하는 상품이 존재하지 않는 경우
-    const product = await Products.findByPk(productId);
+    const product = await prisma.products.findfindFirst({
+      where: { id: +productId },
+    });
 
     if (!product) {
       return res.status(404).json({
@@ -203,7 +203,9 @@ productsRouter.delete('/:productId', needSignin, async (req, res) => {
     const { id: userId, name: userName } = res.locals.user;
 
     // 일치하는 상품이 존재하지 않는 경우
-    const product = await Products.findByPk(productId);
+    const product = await prisma.products.findFirst({
+      where: { id: +productId },
+    });
 
     if (!product) {
       return res.status(404).json({
